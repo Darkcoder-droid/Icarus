@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from qdrant_client import QdrantClient
 from qdrant_client.models import PointStruct, VectorParams, Distance
 from sentence_transformers import SentenceTransformer
+from hf_utils import parse_huggingface_repo
 
 app = FastAPI()
 
@@ -43,6 +44,33 @@ class RepoPayload(BaseModel):
 @app.post("/ingest")
 async def ingest_repo(payload: RepoPayload):
     base_url = payload.repo_url.rstrip("/")
+    
+    points = []
+    # Using a dynamic generic ID approach based on collection vector count or random UUID could be better,
+    # but we'll stick to a simple strategy (or we could fetch collection info and base it on points count)
+    # Actually Qdrant allows passing string UUIDs, but here numeric id=1 is used. 
+    # Notice: using `id=1` recursively across multiple ingests without unique IDs might overwrite points!
+    # I'll fix this by using uuid for unique indexing so it doesn't just overwrite previous ingests.
+    import uuid
+    
+    if "huggingface.co" in base_url:
+        try:
+            hf_info, repo_id = parse_huggingface_repo(base_url)
+            # Encode info
+            vector = embedding_model.encode(hf_info).tolist()
+            points.append(
+                PointStruct(
+                    id=str(uuid.uuid4()),
+                    vector=vector,
+                    payload={"path": f"HF_MODEL_INFO_{repo_id}.txt", "text": hf_info}
+                )
+            )
+            qdrant.upsert(collection_name=COLLECTION_NAME, points=points)
+            return {"status": f"Successfully indexed Hugging Face Model info for {repo_id}."}
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+    
+    # Otherwise treat as GitHub Repo
     zip_url = f"{base_url}/archive/refs/heads/main.zip"
     
     response = requests.get(zip_url)
@@ -52,7 +80,6 @@ async def ingest_repo(payload: RepoPayload):
         if response.status_code != 200:
             raise HTTPException(status_code=400, detail="Could not download repo. Ensure it is public.")
 
-    points = []
     point_id = 1
     allowed_exts = {".py", ".js", ".ts", ".html", ".css", ".md", ".json", ".txt"}
     
@@ -94,12 +121,11 @@ async def ingest_repo(payload: RepoPayload):
                             vector = embedding_model.encode(chunk).tolist()
                             points.append(
                                 PointStruct(
-                                    id=point_id,
+                                    id=str(uuid.uuid4()),
                                     vector=vector,
                                     payload={"path": clean_path, "text": chunk}
                                 )
                             )
-                            point_id += 1
                     except Exception:
                         pass 
 
@@ -110,12 +136,11 @@ async def ingest_repo(payload: RepoPayload):
             
             points.append(
                 PointStruct(
-                    id=point_id,
+                    id=str(uuid.uuid4()),
                     vector=map_vector,
                     payload={"path": "MASTER_ARCHITECTURE_MAP.txt", "text": map_text}
                 )
             )
-            point_id += 1
 
     if points:
         qdrant.upsert(collection_name=COLLECTION_NAME, points=points)
