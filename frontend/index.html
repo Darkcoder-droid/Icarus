@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Icarus AI</title>
+    <style>
+      :root {
+        --bg: #0d0d0d;
+        --surface: #1a1a1a;
+        --text: #f2f2f2;
+        --accent: #007aff;
+        --danger: #ff3b30;
+      }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif;
+        background-color: var(--bg);
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        text-align: center;
+      }
+      .container {
+        background: var(--surface);
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        width: 100%;
+        max-width: 400px;
+      }
+      h1 {
+        margin: 0 0 10px 0;
+        font-weight: 600;
+        letter-spacing: -1px;
+      }
+      p {
+        color: #888;
+        font-size: 14px;
+        margin-bottom: 30px;
+        line-height: 1.5;
+      }
+
+      .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      input {
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid #333;
+        background: #000;
+        color: #fff;
+        font-size: 14px;
+        outline: none;
+      }
+      input:focus {
+        border-color: var(--accent);
+      }
+      .action-btn {
+        padding: 12px;
+        border-radius: 8px;
+        border: none;
+        background: var(--accent);
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+      .action-btn:hover {
+        background: #006ae6;
+      }
+      .action-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      #ingestStatus {
+        font-size: 12px;
+        color: #4cd964;
+        margin-top: 5px;
+        height: 15px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Icarus</h1>
+      <p>Voice AI Code Companion</p>
+
+      <div class="input-group">
+        <input
+          type="url"
+          id="repoUrl"
+          placeholder="https://github.com/Darkcoder-droid/repo-name"
+          autocomplete="off"
+        />
+        <button
+          type="button"
+          id="ingestBtn"
+          class="action-btn"
+          onclick="startIndexing()"
+        >
+          Index GitHub Repo
+        </button>
+        <div id="ingestStatus"></div>
+      </div>
+
+      <p style="margin-top: 20px; color: #555">
+        Once the repository is indexed, click the floating button in the bottom
+        right corner to talk to Icarus!
+      </p>
+    </div>
+
+    <script
+      src="https://unpkg.com/@vapi-ai/client-sdk-react/dist/embed/widget.umd.js"
+      async
+      type="text/javascript"
+    ></script>
+
+    <vapi-widget
+      public-key="e27aba30-7260-4ec8-a927-89185adcb702"
+      assistant-id="ea06a0de-053e-4d31-9f06-c4983a277840"
+      mode="voice"
+      theme="dark"
+      position="bottom-right"
+    ></vapi-widget>
+
+    <script>
+      // Hardwired function that cannot be bypassed by browser quirks
+      async function startIndexing() {
+        const ingestBtn = document.getElementById("ingestBtn");
+        const repoUrl = document.getElementById("repoUrl");
+        const ingestStatus = document.getElementById("ingestStatus");
+
+        const url = repoUrl.value.trim();
+
+        if (!url) {
+          ingestStatus.style.color = "var(--danger)";
+          ingestStatus.innerText = "Please enter a valid GitHub URL";
+          return;
+        }
+
+        ingestBtn.disabled = true;
+        ingestBtn.innerText = "⏳ Downloading & Indexing...";
+        ingestStatus.style.color = "#888";
+        ingestStatus.innerText = "Check Python terminal for progress...";
+
+        try {
+          const response = await fetch("http://127.0.0.1:8000/ingest", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ repo_url: url }),
+          });
+
+          const data = await response.json();
+          if (response.ok) {
+            ingestStatus.style.color = "#4cd964";
+            ingestStatus.innerText = "✓ Repository Indexed!";
+            ingestBtn.innerText = "Index Another Repo";
+          } else {
+            throw new Error(data.detail || "Ingest failed");
+          }
+        } catch (err) {
+          ingestStatus.style.color = "var(--danger)";
+          ingestStatus.innerText = "Error: " + err.message;
+          ingestBtn.innerText = "Try Again";
+        } finally {
+          ingestBtn.disabled = false;
+        }
+      }
+    </script>
+  </body>
+</html>
