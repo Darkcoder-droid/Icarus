@@ -45,4 +45,4 @@ Icarus is built using a modern AI-native stack:
 
 ## License
 
-This project is licensed under the **MIT License**. Feel free to use, modify, and distribute it as per the license terms.
+This project is licensed under the [MIT License](LICENSE). Feel free to use, modify, and distribute it as per the license terms.
