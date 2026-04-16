@@ -5,6 +5,7 @@ import zipfile
 import io
 import tempfile
 import json
+import traceback
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -95,6 +96,8 @@ async def ingest_repo(payload: RepoPayload):
             print(f"Successfully indexed 1 chunks into Qdrant Cloud.")
             return {"status": f"Successfully indexed Hugging Face Model info for {repo_id}."}
         except Exception as e:
+            print(f"ERROR indexing Hugging Face repo: {e}")
+            traceback.print_exc()
             raise HTTPException(status_code=400, detail=str(e))
     
     # Otherwise treat as GitHub Repo

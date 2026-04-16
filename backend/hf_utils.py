@@ -9,21 +9,28 @@ def parse_huggingface_repo(repo_url: str):
     repo_url = repo_url.rstrip("/")
     # Extract the repo id from the url (e.g., "TheBloke/Llama-2-7b-Chat-GGUF")
     # A standard URL looks like https://huggingface.co/username/repo
-    if "huggingface.co/" not in repo_url:
-        raise ValueError("Not a valid Hugging Face URL")
-        
-    repo_path = repo_url.split("huggingface.co/")[-1]
+    # Handle if it's a dataset or model
+    is_dataset = "/datasets/" in repo_url.lower()
     
-    # Strictly extract username and repo, ignoring /tree/main or parameters
-    repo_path = repo_path.split("?")[0]
-    parts = repo_path.split("/")
+    # Split by domain and get everything after
+    repo_path = repo_url.split("huggingface.co/")[-1]
+    # Remove query parameters and hashes
+    repo_path = repo_path.split("?")[0].split("#")[0]
+    # Split into components and filter out empty strings (like trailing slashes or /tree/main)
+    parts = [p for p in repo_path.split("/") if p and p not in ("tree", "blob", "datasets")]
+    
     if len(parts) >= 2:
         repo_id = f"{parts[0]}/{parts[1]}"
+    elif len(parts) == 1:
+        repo_id = parts[0]
     else:
-        repo_id = repo_path
+        raise ValueError("Could not determine repository ID from URL.")
     
-    # We will query the models api
-    api_url = f"https://huggingface.co/api/models/{repo_id}"
+    # Select correct API endpoint
+    api_type = "datasets" if is_dataset else "models"
+    api_url = f"https://huggingface.co/api/{api_type}/{repo_id}"
+    
+    print(f"Querying HF API: {api_url}")
     resp = requests.get(api_url)
     
     if resp.status_code != 200:
