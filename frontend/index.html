@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Icarus | Code Companion</title>
-    <link rel="icon" href="favicon.svg" type="image/svg+xml">
-    <link rel="shortcut icon" href="favicon.svg">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="shortcut icon" href="favicon.svg" />
     <style>
       :root {
         --bg: #000000;
@@ -35,13 +35,135 @@
         -webkit-font-smoothing: antialiased;
       }
 
-      /* --- Top Navigation --- */
-      .top-nav {
-        height: 70px;
-        padding: 0 40px;
+      /* =========================================
+         THE ICARUS LAUNCH PAGE (OVERLAY)
+         ========================================= */
+      #launchOverlay {
+        position: fixed;
+        inset: 0;
+        background-color: #000;
+        z-index: 99999; /* Stays above absolutely everything */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+      }
+
+      /* The Sun */
+      .sun-core {
+        position: absolute;
+        top: -150px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(
+          circle,
+          rgba(255, 149, 0, 0.8) 0%,
+          rgba(255, 69, 58, 0.2) 40%,
+          transparent 70%
+        );
+        border-radius: 50%;
+        filter: blur(20px);
+        opacity: 0.3;
+        transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        pointer-events: none;
+      }
+
+      /* The Supernova Effect */
+      .sun-core.supernova {
+        opacity: 1;
+        transform: translateX(-50%) scale(15);
+        background: radial-gradient(
+          circle,
+          #ffffff 0%,
+          rgba(255, 149, 0, 0.8) 20%,
+          transparent 60%
+        );
+        filter: blur(10px);
+      }
+
+      /* Brand Typography */
+      .launch-brand {
+        text-align: center;
+        margin-bottom: 60px;
+        z-index: 2;
+        transition: opacity 0.3s ease;
+      }
+      .launch-brand h1 {
+        font-size: 48px;
+        font-weight: 700;
+        letter-spacing: -2px;
+        margin: 0 0 10px 0;
+        background: linear-gradient(180deg, #fff 0%, #888 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .launch-brand p {
+        font-size: 16px;
+        color: var(--text-muted);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin: 0;
+      }
+
+      /* The Icarus Button */
+      .launch-btn {
+        position: relative;
+        z-index: 2;
+        padding: 16px 40px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #fff;
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 30px;
+        cursor: pointer;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        gap: 10px;
+      }
+      .launch-btn:hover {
+        border-color: rgba(255, 149, 0, 0.6);
+        box-shadow: 0 0 30px rgba(255, 149, 0, 0.2);
+        background: rgba(255, 149, 0, 0.05);
+      }
+      .launch-btn svg {
+        width: 18px;
+        height: 18px;
+        fill: currentColor;
+        transition: 0.3s;
+      }
+
+      /* The Flight Animation */
+      .launch-btn.fly {
+        width: 60px;
+        height: 60px;
+        padding: 0;
+        border-radius: 50%;
+        background: #fff;
+        border-color: #fff;
+        box-shadow:
+          0 0 50px #ff9500,
+          0 0 100px #ff453a;
+        transform: translateY(-50vh) scale(0.2);
+        color: transparent; /* Hides text */
+      }
+      .launch-btn.fly svg {
+        opacity: 0;
+      }
+      /* ========================================= */
+
+      /* --- Symmetrical Top Navigation --- */
+      .top-nav {
+        height: 70px;
+        padding: 0 30px;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
         background: rgba(21, 21, 22, 0.7);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
@@ -49,28 +171,40 @@
         z-index: 100;
       }
 
+      .nav-left {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+      .nav-center {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 300px;
+        height: 100%;
+      }
+      .nav-right {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+      }
+
       .brand {
         display: flex;
         align-items: center;
-        gap: 12px;
-        font-size: 20px;
+        gap: 10px;
+        font-size: 18px;
         font-weight: 600;
         letter-spacing: -0.5px;
       }
       .brand svg {
-        width: 24px;
-        height: 24px;
+        width: 22px;
+        height: 22px;
         fill: var(--text);
       }
 
-      .nav-controls {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-      }
-
       .repo-input {
-        width: 250px;
+        width: 320px;
         padding: 10px 16px;
         border-radius: 12px;
         border: 1px solid var(--border);
@@ -78,11 +212,12 @@
         color: var(--text);
         font-size: 14px;
         outline: none;
-        transition: 0.2s;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
       }
       .repo-input:focus {
         border-color: var(--accent);
         background: #000;
+        box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.2);
       }
 
       .btn-ghost,
@@ -91,14 +226,14 @@
         border: 1px solid var(--border);
         color: var(--text);
         border-radius: 12px;
-        padding: 10px 20px;
+        padding: 10px 18px;
         font-size: 14px;
         font-weight: 500;
         cursor: pointer;
         display: flex;
         align-items: center;
         gap: 8px;
-        transition: 0.2s;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
       }
       .btn-ghost:hover,
       .btn-index:hover:not(:disabled) {
@@ -126,26 +261,25 @@
       .ingest-container {
         display: flex;
         align-items: center;
-        gap: 16px;
-        transition: all 0.3s ease;
+        gap: 12px;
+        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
       }
-
       .ingest-container.centered {
         flex-direction: column;
+        gap: 16px;
       }
-
       .ingest-container.centered .repo-input {
-        width: 350px;
+        width: 380px;
         padding: 14px 20px;
         font-size: 16px;
+        text-align: center;
       }
-
       .ingest-container.centered .btn-index {
         padding: 12px 32px;
         font-size: 16px;
       }
 
-      /* --- Center Stage & Functional Animation --- */
+      /* --- Center Stage Core --- */
       .center-stage {
         flex: 1;
         display: flex;
@@ -153,6 +287,7 @@
         align-items: center;
         justify-content: center;
         position: relative;
+        gap: 40px;
       }
 
       .core-wrapper {
@@ -236,11 +371,14 @@
         fill: currentColor;
         transition: 0.3s;
       }
-      .mic-btn:hover {
+      .mic-btn:hover:not(:disabled) {
         background: rgba(255, 255, 255, 0.1);
         transform: scale(1.05);
       }
-
+      .mic-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
       .mic-btn.active {
         background: rgba(10, 132, 255, 0.15);
         border-color: var(--accent);
@@ -250,8 +388,7 @@
       }
 
       .status-text {
-        margin-top: 40px;
-        font-size: 16px;
+        font-size: 15px;
         letter-spacing: 2px;
         text-transform: uppercase;
         color: var(--text-muted);
@@ -263,34 +400,46 @@
         text-shadow: 0 0 10px var(--accent-glow);
       }
 
-      /* --- Slide-Out History Drawer --- */
-      .history-drawer {
+      /* --- Symmetrical Drawers --- */
+      .drawer {
         position: fixed;
         top: 70px;
-        right: 0;
         bottom: 0;
-        width: 400px;
+        width: 420px;
         background: rgba(21, 21, 22, 0.85);
         backdrop-filter: blur(30px);
         -webkit-backdrop-filter: blur(30px);
-        border-left: 1px solid var(--border);
-        transform: translateX(100%);
         transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         display: flex;
         flex-direction: column;
         z-index: 90;
-        box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
       }
 
+      .terminal-drawer {
+        left: 0;
+        border-right: 1px solid var(--border);
+        transform: translateX(-100%);
+        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+      }
+      .terminal-drawer.open {
+        transform: translateX(0);
+      }
+
+      .history-drawer {
+        right: 0;
+        border-left: 1px solid var(--border);
+        transform: translateX(100%);
+        box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+      }
       .history-drawer.open {
         transform: translateX(0);
       }
 
       .drawer-header {
-        padding: 20px;
+        padding: 16px 20px;
         border-bottom: 1px solid var(--border);
         font-weight: 600;
-        font-size: 15px;
+        font-size: 14px;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -302,23 +451,82 @@
         color: var(--text-muted);
         cursor: pointer;
         padding: 4px;
-      }
-      .close-btn:hover {
-        color: var(--text);
+        display: flex;
       }
       .close-btn svg {
         width: 20px;
         height: 20px;
         fill: currentColor;
+        transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      }
+      .close-btn:hover {
+        color: var(--text);
+      }
+      .terminal-drawer .close-btn:hover svg {
+        transform: translateX(-4px);
+      }
+      .history-drawer .close-btn:hover svg {
+        transform: translateX(4px);
       }
 
-      .chat-layout {
+      .drawer-content {
         flex: 1;
         padding: 20px;
         overflow-y: auto;
         display: flex;
         flex-direction: column;
         gap: 16px;
+      }
+
+      .mac-window {
+        background: #000;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+      }
+      .mac-header {
+        height: 28px;
+        background: #1e1e1e;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        padding: 0 12px;
+        gap: 6px;
+      }
+      .mac-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+      }
+      .mac-dot.red {
+        background: #ff5f56;
+      }
+      .mac-dot.yellow {
+        background: #ffbd2e;
+      }
+      .mac-dot.green {
+        background: #27c93f;
+      }
+
+      .live-textarea {
+        flex: 1;
+        background: transparent;
+        border: none;
+        color: #4cd964;
+        font-family:
+          "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier,
+          monospace;
+        font-size: 13px;
+        line-height: 1.5;
+        padding: 16px;
+        resize: none;
+        outline: none;
+      }
+      .live-textarea::placeholder {
+        color: #555;
       }
 
       .bubble-wrapper {
@@ -336,10 +544,10 @@
         max-width: 85%;
         padding: 12px 16px;
         border-radius: 16px;
-        font-size: 14px;
+        font-size: 13px;
         line-height: 1.5;
         word-wrap: break-word;
-        white-space: pre-wrap; /* Keeps code formatting clean */
+        white-space: pre-wrap;
       }
       .user .bubble {
         background: var(--accent);
@@ -358,22 +566,18 @@
         color: var(--text-muted);
         text-transform: uppercase;
         margin: 10px 0;
+        text-align: center;
       }
 
-      /* The Animated Typing Cursor */
       .typing-cursor {
         display: inline-block;
-        width: 8px;
-        height: 14px;
+        width: 6px;
+        height: 12px;
         background-color: var(--accent);
         vertical-align: middle;
         margin-left: 4px;
         animation: blink 1s step-end infinite;
-        border-radius: 2px;
       }
-      .user .typing-cursor {
-        background-color: #fff;
-      } /* White cursor for user bubble */
       @keyframes blink {
         50% {
           opacity: 0;
@@ -382,24 +586,74 @@
     </style>
   </head>
   <body>
-    <div class="top-nav">
-      <div class="brand">
-        <svg viewBox="0 0 24 24">
-          <path d="M12 2L2 22h20L12 2zm0 3.8l7.2 14.2H4.8L12 5.8z" />
-        </svg>
-        Icarus
+    <div id="launchOverlay">
+      <div class="sun-core" id="sunCore"></div>
+
+      <div class="launch-brand" id="launchBrand">
+        <h1>Icarus</h1>
+        <p>Voice-Native Code Companion</p>
       </div>
-      <div class="nav-controls">
-        <div id="ingestStatus"></div>
-        <div id="navIngestTarget"></div>
-        <div
-          style="
-            width: 1px;
-            height: 24px;
-            background: var(--border);
-            margin: 0 8px;
-          "
-        ></div>
+
+      <button id="launchBtn" class="launch-btn">
+        <span>Initialize Core</span>
+        <svg viewBox="0 0 24 24">
+          <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z" />
+        </svg>
+      </button>
+    </div>
+
+    <script>
+      // The Metaphor: Icarus flies into the sun.
+      document
+        .getElementById("launchBtn")
+        .addEventListener("click", function () {
+          const btn = this;
+          const sun = document.getElementById("sunCore");
+          const overlay = document.getElementById("launchOverlay");
+          const brand = document.getElementById("launchBrand");
+
+          // 1. Hide the text
+          brand.style.opacity = "0";
+
+          // 2. Button shoots up like a spark
+          btn.classList.add("fly");
+
+          // 3. Exactly as it hits the top, the sun explodes
+          setTimeout(() => {
+            sun.classList.add("supernova");
+          }, 300); // 300ms delay matches the CSS travel time
+
+          // 4. Fade the whole overlay to reveal the app underneath
+          setTimeout(() => {
+            overlay.style.opacity = "0";
+            // Completely remove it from the DOM so you can click the app behind it
+            setTimeout(() => {
+              overlay.style.display = "none";
+            }, 800);
+          }, 700);
+        });
+    </script>
+    <div class="top-nav">
+      <div class="nav-left">
+        <div class="brand">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2L2 22h20L12 2zm0 3.8l7.2 14.2H4.8L12 5.8z" />
+          </svg>
+          Icarus
+        </div>
+        <button type="button" id="terminalToggleBtn" class="btn-ghost">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-1 14H5V8h14v10zm-3-1l-1.41-1.41L17.17 13H9v-2h8.17l-2.58-2.59L16 7l5 5-5 5z"
+            />
+          </svg>
+          Live Context
+        </button>
+      </div>
+
+      <div class="nav-center" id="navIngestTarget"></div>
+
+      <div class="nav-right">
         <button type="button" id="historyToggleBtn" class="btn-ghost">
           <svg viewBox="0 0 24 24">
             <path
@@ -412,23 +666,6 @@
     </div>
 
     <div class="center-stage">
-      <div class="core-wrapper" id="coreAnim" style="display: none;">
-        <div class="ring ring-1"></div>
-        <div class="ring ring-2"></div>
-        <div class="ring ring-3"></div>
-
-        <button id="micBtn" class="mic-btn" title="Initialize Session">
-          <svg id="micIcon" viewBox="0 0 24 24">
-            <path
-              d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"
-            />
-            <path
-              d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"
-            />
-          </svg>
-        </button>
-      </div>
-
       <div id="centerIngestTarget">
         <div id="ingestContainer" class="ingest-container centered">
           <input
@@ -449,36 +686,98 @@
             </svg>
             Index
           </button>
+          <div id="ingestStatus"></div>
         </div>
       </div>
 
-      <div id="centerStatus" class="status-text">Awaiting Repository</div>
-    </div>
+      <div class="core-wrapper" id="coreAnim" style="display: none">
+        <div class="ring ring-1"></div>
+        <div class="ring ring-2"></div>
+        <div class="ring ring-3"></div>
 
-    <div id="historyDrawer" class="history-drawer">
-      <div class="drawer-header">
-        Session Transcript
-        <button class="close-btn" id="closeDrawerBtn">
-          <svg viewBox="0 0 24 24">
+        <button id="micBtn" class="mic-btn" title="Initialize Session">
+          <svg id="micIcon" viewBox="0 0 24 24">
             <path
-              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+              d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"
+            />
+            <path
+              d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"
             />
           </svg>
         </button>
       </div>
-      <div id="chatLayout" class="chat-layout">
+
+      <div id="centerStatus" class="status-text">Loading Voice Config...</div>
+    </div>
+
+    <div id="terminalDrawer" class="drawer terminal-drawer open">
+      <div class="drawer-header">
+        Dynamic Context Injection
+        <button class="close-btn" id="closeTerminalBtn" title="Collapse Drawer">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"
+            />
+          </svg>
+        </button>
+      </div>
+      <div class="drawer-content">
+        <div class="system-msg">
+          Paste stack traces or error logs below. Icarus will automatically read
+          this upon connection.
+        </div>
+        <div class="mac-window">
+          <div class="mac-header">
+            <div class="mac-dot red"></div>
+            <div class="mac-dot yellow"></div>
+            <div class="mac-dot green"></div>
+          </div>
+          <textarea
+            id="liveErrorInput"
+            class="live-textarea"
+            placeholder="> Awaiting terminal trace or runtime error..."
+          ></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div id="historyDrawer" class="drawer history-drawer">
+      <div class="drawer-header">
+        <button class="close-btn" id="closeDrawerBtn" title="Collapse Drawer">
+          <svg viewBox="0 0 24 24">
+            <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z" />
+          </svg>
+        </button>
+        Session Transcript
+      </div>
+      <div id="chatLayout" class="drawer-content">
         <div class="system-msg">History Log Initialized</div>
       </div>
     </div>
 
     <script>
-      const drawer = document.getElementById("historyDrawer");
+      const termDrawer = document.getElementById("terminalDrawer");
+      const histDrawer = document.getElementById("historyDrawer");
+
+      document
+        .getElementById("terminalToggleBtn")
+        .addEventListener("click", () => {
+          termDrawer.classList.toggle("open");
+          histDrawer.classList.remove("open");
+        });
+      document
+        .getElementById("closeTerminalBtn")
+        .addEventListener("click", () => termDrawer.classList.remove("open"));
+
       document
         .getElementById("historyToggleBtn")
-        .addEventListener("click", () => drawer.classList.toggle("open"));
+        .addEventListener("click", () => {
+          histDrawer.classList.toggle("open");
+          termDrawer.classList.remove("open");
+        });
       document
         .getElementById("closeDrawerBtn")
-        .addEventListener("click", () => drawer.classList.remove("open"));
+        .addEventListener("click", () => histDrawer.classList.remove("open"));
 
       async function startIndexing() {
         const ingestBtn = document.getElementById("ingestBtn");
@@ -490,7 +789,7 @@
         if (!url) return;
 
         ingestBtn.disabled = true;
-        
+
         centerStatus.innerText = "Indexing Repository...";
         centerStatus.classList.add("active");
 
@@ -508,18 +807,20 @@
           if (response.ok) {
             ingestStatus.style.color = "#32D74B";
             ingestStatus.innerHTML =
-              '<svg style="width:14px; height:14px; fill:currentColor;" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Database Ready';
-            
-            centerStatus.classList.remove("active");
-            centerStatus.innerText = "System Standby";
+              '<svg style="width:14px; height:14px; fill:currentColor;" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> DB Ready';
 
             const ingestContainer = document.getElementById("ingestContainer");
             ingestContainer.classList.remove("centered");
-            document.getElementById("navIngestTarget").appendChild(ingestContainer);
-            
-            document.getElementById("centerIngestTarget").style.display = "none";
+            document
+              .getElementById("navIngestTarget")
+              .appendChild(ingestContainer);
+
+            document.getElementById("centerIngestTarget").style.display =
+              "none";
             document.getElementById("coreAnim").style.display = "flex";
-            
+
+            centerStatus.classList.remove("active");
+            centerStatus.innerText = "System Standby";
           } else {
             throw new Error("Ingest failed");
           }
@@ -551,18 +852,14 @@
       const chatLayout = document.getElementById("chatLayout");
       let isCallActive = false;
       micBtn.disabled = true;
-      centerStatus.innerText = "Loading Voice Config...";
 
-      // State Trackers for the streaming text
       let activeRole = null;
       let activeBubble = null;
       let committedText = "";
 
       function handleTranscriptStream(message) {
-        // Standardize the role identifier
         const role = message.role === "user" ? "user" : "ai";
 
-        // If the speaker changes, create a new bubble container
         if (activeRole !== role || !activeBubble) {
           const wrapper = document.createElement("div");
           wrapper.className = `bubble-wrapper ${role}`;
@@ -574,47 +871,58 @@
           chatLayout.appendChild(wrapper);
 
           activeRole = role;
-          committedText = ""; // Reset the saved text for the new speaker
+          committedText = "";
         }
 
-        // If Vapi is streaming the sentence word-by-word
         if (message.transcriptType === "partial") {
           activeBubble.innerHTML =
             (committedText ? committedText + " " : "") +
             message.transcript +
             '<span class="typing-cursor"></span>';
-        }
-        // If Vapi says this specific sentence is finished
-        else if (message.transcriptType === "final") {
+        } else if (message.transcriptType === "final") {
           committedText += (committedText ? " " : "") + message.transcript;
-          activeBubble.innerHTML = committedText; // Removes cursor from finished sentence
+          activeBubble.innerHTML = committedText;
         }
-
-        // Always force the history drawer to scroll to the bottom
         chatLayout.scrollTop = chatLayout.scrollHeight;
       }
 
-      micBtn.addEventListener("click", async () => {
-        if (!vapi || !assistantId) {
-          centerStatus.innerText = "Missing Voice Config";
-          return;
-        }
-
+      micBtn.addEventListener("click", () => {
         if (!isCallActive) {
-          try {
-            centerStatus.innerText = "Connecting to Core...";
-            micIcon.innerHTML =
-              '<path d="M12 4V2C6.48 2 2 6.48 2 12h2c0-4.42 3.58-8 8-8z"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></path>';
-            await vapi.start(assistantId);
-          } catch (err) {
-            console.error("Failed to start Vapi:", err);
-            centerStatus.innerText = "Connection Error";
-            micBtn.className = "mic-btn";
+          centerStatus.innerText = "Connecting to Core...";
+          micIcon.innerHTML =
+            '<path d="M12 4V2C6.48 2 2 6.48 2 12h2c0-4.42 3.58-8 8-8z"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></path>';
+
+          const liveError = document
+            .getElementById("liveErrorInput")
+            .value.trim();
+          let overrides = {};
+
+          if (liveError) {
+            overrides = {
+              variableValues: {
+                live_error: liveError,
+              },
+            };
           }
+
+          vapi.start(assistantId, overrides);
         } else {
           vapi.stop();
         }
       });
+
+      function getFormattedTime() {
+        const now = new Date();
+        const date = now.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        });
+        const time = now.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        return `${date} — ${time}`;
+      }
 
       function registerVapiEvents() {
         vapi.on("call-start", () => {
@@ -624,6 +932,11 @@
           centerStatus.className = "status-text active";
           centerStatus.innerText = "Icarus Active — Listening";
           micIcon.innerHTML = '<path d="M6 6h12v12H6z"/>';
+
+          const startMsg = document.createElement("div");
+          startMsg.className = "system-msg";
+          startMsg.innerText = `Session Initialized: ${getFormattedTime()}`;
+          chatLayout.appendChild(startMsg);
         });
 
         vapi.on("call-end", () => {
@@ -635,18 +948,19 @@
           micIcon.innerHTML =
             '<path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>';
 
-          // Reset state trackers on disconnect
+          const endMsg = document.createElement("div");
+          endMsg.className = "system-msg";
+          endMsg.innerText = `Session Terminated: ${getFormattedTime()}`;
+          chatLayout.appendChild(endMsg);
+
           activeRole = null;
           activeBubble = null;
           committedText = "";
         });
 
         vapi.on("message", (message) => {
-          // Only fire the logic on actual transcript updates
           if (message.type === "transcript") {
             handleTranscriptStream(message);
-
-            // Keep the center stage status accurate
             if (message.role === "user") {
               centerStatus.innerText = "Receiving Audio...";
             } else {
@@ -656,50 +970,88 @@
         });
 
         vapi.on("error", (e) => {
+          console.error("Vapi runtime error:", e);
+          const detail =
+            (Array.isArray(e?.error?.message)
+              ? e.error.message.join(", ")
+              : null) ||
+            e?.error?.message ||
+            e?.errorMsg ||
+            e?.message ||
+            (typeof e?.error === "string" ? e.error : null) ||
+            (e?.error ? JSON.stringify(e.error) : null) ||
+            "Unknown error";
           centerStatus.innerText = "Connection Error";
           coreAnim.classList.remove("active");
           micBtn.className = "mic-btn";
+
+          const errorMsg = document.createElement("div");
+          errorMsg.className = "system-msg";
+          errorMsg.innerText = `Voice Error: ${detail}`;
+          chatLayout.appendChild(errorMsg);
         });
       }
 
       async function fetchVoiceConfig() {
-        const candidates = ["/config", "http://127.0.0.1:8000/config"];
-        let lastError = "Unknown error";
+        const candidates = ["http://127.0.0.1:8000/config"];
+        const errors = [];
 
         for (const url of candidates) {
           try {
             const response = await fetch(url);
             if (!response.ok) {
-              lastError = `${url} returned ${response.status}`;
+              let detail = "";
+              try {
+                const body = await response.json();
+                detail = body?.detail ? ` (${body.detail})` : "";
+              } catch (_err) {
+                // ignore non-JSON response bodies
+              }
+              errors.push(`${url} returned ${response.status}${detail}`);
               continue;
             }
 
             const config = await response.json();
-            if (config.publicKey && config.assistantId) {
-              return config;
+            if ((config.publicKey || config.vapiKey) && config.assistantId) {
+              return {
+                publicKey: config.publicKey || config.vapiKey,
+                assistantId: config.assistantId,
+              };
             }
-
-            lastError = `${url} returned incomplete config`;
+            errors.push(`${url} returned incomplete config`);
           } catch (err) {
-            lastError = `${url} request failed`;
+            errors.push(`${url} request failed`);
           }
         }
-
-        throw new Error(lastError);
+        throw new Error(errors.join(" | ") || "Unknown error");
       }
 
       async function initVapi() {
         try {
           const config = await fetchVoiceConfig();
-
           vapi = new Vapi(config.publicKey);
           assistantId = config.assistantId;
+
           registerVapiEvents();
           micBtn.disabled = false;
-          centerStatus.innerText = "System Standby";
+
+          if (
+            document.getElementById("centerStatus").innerText ===
+            "Loading Voice Config..."
+          ) {
+            document.getElementById("centerStatus").innerText =
+              "Awaiting Repository";
+          }
         } catch (err) {
           console.error("Vapi init error:", err);
-          centerStatus.innerText = "Voice Config Error";
+          document.getElementById("centerStatus").innerText =
+            "Voice Config Error";
+          const errorMsg = document.createElement("div");
+          errorMsg.className = "system-msg";
+          errorMsg.innerText = `Config Error: ${
+            err?.message || "Unknown error"
+          }`;
+          chatLayout.appendChild(errorMsg);
         }
       }
 

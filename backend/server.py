@@ -28,7 +28,8 @@ app.add_middleware(
 # 🛑 Get these from cloud.qdrant.io
 QDRANT_URL = os.getenv("QDRANT_URL")
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
-VAPI_PUBLIC_KEY = os.getenv("VAPI_PUBLIC_KEY") or os.getenv("VAPI_KEY")
+VAPI_PUBLIC_KEY = os.getenv("VAPI_PUBLIC_KEY")
+LEGACY_VAPI_KEY = os.getenv("VAPI_KEY")
 VAPI_ASSISTANT_ID = os.getenv("VAPI_ASSISTANT_ID")
 missing = []
 if not QDRANT_URL:
@@ -56,10 +57,26 @@ class RepoPayload(BaseModel):
 
 @app.get("/config")
 async def get_config():
-    if not VAPI_PUBLIC_KEY or not VAPI_ASSISTANT_ID:
+    if not VAPI_ASSISTANT_ID:
         raise HTTPException(
             status_code=500,
-            detail="Missing Vapi configuration. Set VAPI_PUBLIC_KEY (or VAPI_KEY) and VAPI_ASSISTANT_ID in .env.",
+            detail="Missing Vapi configuration. Set VAPI_ASSISTANT_ID in .env.",
+        )
+
+    if not VAPI_PUBLIC_KEY and LEGACY_VAPI_KEY:
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "VAPI_PUBLIC_KEY is required for web calls. "
+                "You currently set VAPI_KEY. Set VAPI_PUBLIC_KEY to your Vapi "
+                "public key and restart the backend."
+            ),
+        )
+
+    if not VAPI_PUBLIC_KEY:
+        raise HTTPException(
+            status_code=500,
+            detail="Missing Vapi configuration. Set VAPI_PUBLIC_KEY and VAPI_ASSISTANT_ID in .env.",
         )
 
     return {
