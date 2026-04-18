@@ -779,6 +779,37 @@
         .getElementById("closeDrawerBtn")
         .addEventListener("click", () => histDrawer.classList.remove("open"));
 
+      async function fetchBackendWithFallback(path, options = {}) {
+        const candidates = [
+          "http://127.0.0.1:8000",
+          "http://localhost:8000",
+          `${window.location.protocol}//${window.location.hostname}:8000`,
+        ];
+        const errors = [];
+
+        for (const base of candidates) {
+          try {
+            const response = await fetch(`${base}${path}`, options);
+            return response;
+          } catch (_err) {
+            errors.push(base);
+          }
+        }
+
+        throw new Error(
+          `Backend unreachable on: ${errors.join(", ")}. Ensure FastAPI is running on port 8000.`,
+        );
+      }
+      window.fetchBackendWithFallback = fetchBackendWithFallback;
+
+      async function syncErrorContext(text) {
+        await window.fetchBackendWithFallback("/context/error", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: text || "" }),
+        });
+      }
+
       async function startIndexing() {
         const ingestBtn = document.getElementById("ingestBtn");
         const repoUrl = document.getElementById("repoUrl");
@@ -798,16 +829,24 @@
           '<svg style="width:14px; height:14px; fill:currentColor;" viewBox="0 0 24 24"><path d="M12 4V2C6.48 2 2 6.48 2 12h2c0-4.42 3.58-8 8-8z"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></path></svg> Indexing...';
 
         try {
-          const response = await fetch("http://127.0.0.1:8000/ingest", {
+          const response = await fetchBackendWithFallback("/ingest", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ repo_url: url }),
           });
+          let body = {};
+          try {
+            body = await response.json();
+          } catch (_err) {
+            body = {};
+          }
 
           if (response.ok) {
+            const chunks = body?.stats?.chunks_indexed ?? "unknown";
+            const indexedFiles = body?.stats?.indexed_files ?? "unknown";
             ingestStatus.style.color = "#32D74B";
             ingestStatus.innerHTML =
-              '<svg style="width:14px; height:14px; fill:currentColor;" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> DB Ready';
+              `<svg style="width:14px; height:14px; fill:currentColor;" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> DB Ready · ${chunks} chunks · ${indexedFiles} files`;
 
             const ingestContainer = document.getElementById("ingestContainer");
             ingestContainer.classList.remove("centered");
@@ -820,15 +859,15 @@
             document.getElementById("coreAnim").style.display = "flex";
 
             centerStatus.classList.remove("active");
-            centerStatus.innerText = "System Standby";
+            centerStatus.innerText = `System Standby (${chunks} chunks indexed)`;
           } else {
-            throw new Error("Ingest failed");
+            throw new Error(body?.detail || "Ingest failed");
           }
         } catch (err) {
           centerStatus.classList.remove("active");
           centerStatus.innerText = "Indexing Failed";
           ingestStatus.style.color = "var(--danger)";
-          ingestStatus.innerHTML = `Error`;
+          ingestStatus.innerHTML = `${err?.message || "Error"}`;
         } finally {
           ingestBtn.disabled = false;
         }
@@ -886,7 +925,7 @@
         chatLayout.scrollTop = chatLayout.scrollHeight;
       }
 
-      micBtn.addEventListener("click", () => {
+      micBtn.addEventListener("click", async () => {
         if (!isCallActive) {
           centerStatus.innerText = "Connecting to Core...";
           micIcon.innerHTML =
@@ -903,6 +942,12 @@
                 live_error: liveError,
               },
             };
+          }
+
+          try {
+            await syncErrorContext(liveError);
+          } catch (_err) {
+            // Do not block call start if context sync fails.
           }
 
           vapi.start(assistantId, overrides);
